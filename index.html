@@ -1,91 +1,129 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>GKSBET – Roda a Roda</title>
-  <style>
-    body{font-family:Arial;background:#111;color:#fff;text-align:center;padding-top:40px}
-    #wheel{width:300px;height:300px;border-radius:50%;background:conic-gradient(
-      #e74c3c 0deg 60deg,
-      #f1c40f 60deg 120deg,
-      #2ecc71 120deg 180deg,
-      #3498db 180deg 240deg,
-      #9b59b6 240deg 300deg,
-      #e74c3c 300deg 360deg
-    );margin:20px auto;transition:transform 3s ease-out}
-    button{padding:12px 24px;font-size:18px;cursor:pointer}
-    #saldo{font-size:28px;margin:20px}
-    #adminPanel{display:none;background:#222;padding:20px;margin:20px auto;width:320px;border-radius:8px}
-    input[type=number]{width:80px;padding:4px}
-  </style>
+<meta charset="UTF-8">
+<title>GKSBET – Roda de Coins</title>
+<style>
+  body{font-family:Arial;background:#111;color:#fff;text-align:center;padding-top:40px}
+  #wheel{width:300px;height:300px;border-radius:50%;background:conic-gradient(
+    #e74c3c 0deg 60deg,
+    #f1c40f 60deg 120deg,
+    #2ecc71 120deg 180deg,
+    #3498db 180deg 240deg,
+    #9b59b6 240deg 300deg,
+    #e74c3c 300deg 360deg
+  );margin:20px auto;transition:transform 3s ease-out}
+  button{padding:12px 24px;font-size:18px;cursor:pointer;margin:6px}
+  #saldo{font-size:28px;margin:20px}
+  #adminPanel{display:none;background:#222;padding:20px;margin:20px auto;width:340px;border-radius:8px}
+  small{color:#bbb}
+</style>
 </head>
+
 <body>
-  <h1>GKSBET</h1>
-  <div id="saldo">Saldo: R$ <span id="s">0,00</span></div>
-  <button onclick="girar()">Girar R$ 50 (retorno 1.2×)</button>
-  <div id="wheel"></div>
-  <p id="result"></p>
+<h1>GKSBET</h1>
+<small>Jogo fictício para entretenimento • Coins não possuem valor real</small>
 
-  <!-- Painel do ADM -->
-  <button onclick="toggleAdmin()">🔧 Admin</button>
-  <div id="adminPanel">
-    <h3>Admin GKSBET</h3>
-    <label>Bônus p/ usuário: R$ <input id="bonus" type="number" value="20"></label><br><br>
-    <button onclick="addBonus()">Dar Bônus</button>
-    <button onclick="zerarSaldo()">Zerar Todos</button>
-    <button onclick="exportarDados()">Exportar JSON</button>
-  </div>
+<div id="saldo">Coins: <span id="s">0</span></div>
+<button onclick="girar()">🎯 Girar 50 Coins</button>
 
-  <script>
-    // ---------- CONFIGURAÇÕES ADM ----------
-    const RETORNO = 1.2;          // 1.2× (20 % de lucro)
-    const APOSTA_MIN = 50;
-    const ADM_KEY = 'gksadm';     // chave secreta (só você sabe)
-    // ---------------------------------------
+<div id="wheel"></div>
+<p id="result"></p>
 
-    let s = localStorage._Item('s') ? parseFloat(localStorage.s) : 0;
+<hr style="width:300px;border-color:#333">
+
+<button onclick="toggleAdmin()">🔧 Admin</button>
+
+<div id="adminPanel">
+  <h3>Admin – Gremiis</h3>
+  <button onclick="addBonus()">➕ Dar 200 Coins</button>
+  <button onclick="zerarSaldo()">♻️ Zerar Saldo</button>
+  <button onclick="exportarDados()">📦 Exportar Dados</button>
+</div>
+
+<script>
+/* ===== CONFIGURAÇÕES ===== */
+const APOSTA = 50;
+const RETORNO = 1.2;          // 20% de bônus quando ganha
+const CHANCE_GANHO = 0.45;    // 45% de chance
+const ADM_KEY = 'Sintia1404+';
+/* ======================== */
+
+let s = localStorage.getItem('coins')
+  ? parseInt(localStorage.getItem('coins'))
+  : 0;
+
+atualizarSaldo();
+
+function atualizarSaldo(){
+  document.getElementById('s').innerText = s;
+}
+
+function girar(){
+  if(s < APOSTA){
+    alert('Coins insuficientes.');
+    return;
+  }
+
+  s -= APOSTA;
+  atualizarSaldo();
+
+  let giro = Math.floor(Math.random() * 360 + 720);
+  document.getElementById('wheel').style.transform = `rotate(${giro}deg)`;
+
+  setTimeout(()=>{
+    let ganhou = Math.random() < CHANCE_GANHO;
+
+    if(ganhou){
+      let ganho = Math.floor(APOSTA * RETORNO);
+      s += ganho;
+      document.getElementById('result').innerText =
+        `🎉 Você ganhou ${ganho} Coins!`;
+    } else {
+      document.getElementById('result').innerText =
+        `❌ Você perdeu ${APOSTA} Coins.`;
+    }
+
+    localStorage.setItem('coins', s);
     atualizarSaldo();
+  }, 3000);
+}
 
-    function atualizarSaldo(){ document.getElementById('s').innerText = s.toFixed(2); }
+/* ===== FUNÇÕES ADMIN ===== */
+function toggleAdmin(){
+  let pw = prompt('Senha do Admin:');
+  if(pw === ADM_KEY){
+    document.getElementById('adminPanel').style.display = 'block';
+  } else {
+    alert('Senha inválida.');
+  }
+}
 
-    function girar(){
-      if(s < APOSTA_MIN){ alert('Saldo insuficiente.'); return; }
-      s -= APOSTA_MIN;
-      let giro = Math.floor(Math.random()*360 + 720);
-      let wheel = document.getElementById('wheel');
-      wheel.style.transform = 'rotate('+giro+'deg)';
-      setTimeout(()=>{
-        let grau = giro % 360;
-        let vencedor = (grau < 60) ? 1 : (grau < 120) ? 2 : (grau < 180) ? 3 : (grau < 240) ? 4 : (gru < 300) ? 5 : 6;
-        let ganho = APOSTA_MIN * RETORNO;
-        s += ganho;
-        localStorage.s = s;
-        atualizarSaldo();
-        document.getElementById('result').innerText = 'Parabéns! Você ganhou R$ '+ganho.toFixed(2);
-      }, 3000);
-    }
+function addBonus(){
+  s += 200;
+  localStorage.setItem('coins', s);
+  atualizarSaldo();
+}
 
-    // ------- FUNÇÕES ADM -------
-    function toggleAdmin(){
-      let pw = prompt('Senha ADM:');
-      if(pw === ADM_KEY) document.getElementById('adminPanel').style.display = 'block';
-      else alert('Senha inválida');
-    }
-    function addBonus(){
-      let valor = parseFloat(document.getElementById('bonus').value);
-      s += valor;
-      localStorage.s = s;
-      atualizarSaldo();
-    }
-    function zerarSaldo(){ localStorage.s = 0; s=0; atualizarSaldo(); }
-    function exportarDados(){
-      let data = {timestamp:new Date().toISOString(), saldo:s};
-      let blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
-      let a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'gksbet_backup.json';
-      a.click();
-    }
-  </script>
+function zerarSaldo(){
+  s = 0;
+  localStorage.setItem('coins', s);
+  atualizarSaldo();
+}
+
+function exportarDados(){
+  let data = {
+    admin: 'Gremiis',
+    coins: s,
+    data: new Date().toISOString()
+  };
+  let blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  let a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gksbet_backup.json';
+  a.click();
+}
+</script>
+
 </body>
 </html>
